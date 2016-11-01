@@ -8,20 +8,28 @@
 import string, re, sys
 import pymongo as mongo
 import pandas as pd
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.tokenize.api import StringTokenizer
 from nltk.corpus import stopwords
 from collections import Counter
 
 # UDFs
+"""
 def clean_reviews(a_string, regexpr):
-    """
     :param a_string: A string to be mapped
     :param regexpr: A regular expression to match
     :return: Returns a filtered list of lowercase words without punctuation or stop words
-    """
     tokens = word_tokenize(a_string)
     noPunct = [regexpr.sub('', word) for word in tokens]
     return [word.lower() for word in noPunct if word not in stopwords.words("english") and word != '']
+"""
+
+def filter_tokens(list_of_tokens, regexpr):
+    """
+    Takes in a list of tokens, returns list of tokens that match regex
+    """
+    return [word for word in list_of_tokens if regexpr.match(word)]
+
 
 # Main function
 if __name__ == '__main__':
@@ -48,20 +56,26 @@ if __name__ == '__main__':
     # Pull the times, review text, and rating
     # drop _id field
     obs = collection.count()
-    summaryStats = collection.find({}, {"overall": 1,
+    mongoPull = collection.find({}, {"overall": 1,
                                         "reviewerID": 1,
                                         "unixReviewTime": 1,
                                         "reviewText": 1,
                                         "_id": 0}).limit(100)
 
-    reviewFrame = pd.DataFrame(list(summaryStats))
-    print(reviewFrame.head())
+    reviews = (list(mongoPull))
+
+    # Iterate Extract features
+    for dict in reviews:
+        review = dict["reviewtext"]
+        dict["charcount"] = len(review)
+        dict["words"] = word_tokenize(review)
+        sentences = sent_tokenize(review)
+        token_sent = [word_tokenize(sentence) for sentence in sentences]
 
     # Add column: character count of review
-    reviewFrame["charcount"] = reviewFrame["reviewText"].map(lambda x: len(x))
 
     # Clean the review text and add column
-    regex = re.compile('[%s]' % re.escape(string.punctuation))
+    regex = re.compile('[^%s]+' % re.escape(string.punctuation))
     reviewFrame["cleanText"] = reviewFrame.reviewText.map(lambda x: clean_reviews(x, regex))
 
     # Create dataframe of words and respective counts
@@ -78,7 +92,7 @@ if __name__ == '__main__':
     
 
     # Some output
-    print("Mean Rating =", round(reviewFrame["overall"].mean(), 4))
-    print("Mean number of characters =", round(reviewFrame["charcount"].mean(), 4))
-    print("Top ten most common words =", list(top25))
+    #print("Mean Rating =", round(reviewFrame["overall"].mean(), 4))
+    #print("Mean number of characters =", round(reviewFrame["charcount"].mean(), 4))
+    #print("Top ten most common words =", list(top25))
 
