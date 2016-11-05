@@ -2,8 +2,10 @@
 # Jason Freeberg
 # Fall Quarter 2016
 
-# Predictionss using only the set of most common words in training set
-# No position tagging or chunking
+# Feasibility test.
+# Makes predictions using only the set of N most common words in training set.
+# Classes are made binary: rating > 3 OR rating <= 3
+# Only a simple 2-fold train/test split.
 
 # Modules
 import string, re, sys, time
@@ -11,32 +13,6 @@ import pymongo as mongo
 from helpers import *  # my user defined functions
 from nltk.tokenize import word_tokenize
 import nltk
-
-
-class FeatureExtractor:
-    """
-    Base class for feature extraction. Designed to be flexible for extracting multiple types of features.
-    """
-    def __init__(self, drop_stop_words=True):
-        self.drop_stop_words = drop_stop_words
-        self.tokens = None
-
-    def set_tokens(self):
-        if self.drop_stop_words:
-            pass
-
-        # Change the token attribute
-        self.tokens = None
-
-    def get_features(self):
-
-        # use self.tokens
-        pass
-    pass
-
-
-class SimpleFeatures(FeatureExtractor):
-    pass
 
 # Main function
 if __name__ == '__main__':
@@ -60,6 +36,7 @@ if __name__ == '__main__':
 
     # Training proportion for naive bayes classifier
     TRAIN_PROPORTION = 0.85
+    N_COMMON_WORDS = 100
 
     # Matches punctuation
     regex = re.compile('[^%s]+' % re.escape(string.punctuation))
@@ -73,7 +50,7 @@ if __name__ == '__main__':
                                      "reviewerID": 1,
                                      "unixReviewTime": 1,
                                      "reviewText": 1,
-                                     "_id": 0}).limit(6969)
+                                     "_id": 0}).limit(6000)
 
     reviews = list(mongoPull)
 
@@ -87,7 +64,7 @@ if __name__ == '__main__':
 
     # Set of most common words from training set only.
     word_set = get_word_set(train, "reviewText", regex)
-    common_words = set(Tuple[0] for Tuple in word_set.most_common(100))
+    common_words = set(Tuple[0] for Tuple in word_set.most_common(N_COMMON_WORDS))
 
     trainFeaturesLabels = []
     testFeaturesLabels = []
