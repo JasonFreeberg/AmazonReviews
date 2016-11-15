@@ -1,18 +1,17 @@
 # The Language of Amazon Reviews
-__Jason Freeberg__
 __November 2016__
 
 ## Project Motivation
 
-In 2015 alone, Amazon shipped over one billion packages on behalf of its sellers. And in the days leading to Christmas, Amazon was processing 426 orders per second. Obviously, Amazon is an important player in the online consumer and shipping industry. But my project does not focus on the company's massive throughput. Instead, I wanted to investigate the correlation between a user's text review and the overall rating they assigned to that product. 
+In 2015 alone, Amazon shipped over one billion packages on behalf of its sellers. And in the days leading to Christmas, Amazon processed 426 orders per second. Obviously, the company is an important player in the online consumer and shipping industry. While the company's massive throughput is very interesting, my project focuses on something every Amazon user can relate to... product reviews! Specifically, I wanted to investigate the correlation between a user's text review and the overall rating they assigned to that product. 
 
-When a user makes a purchase on Amazon, he or she takes time to decide between similar products. And any savvy shopper would likely browse through the product reviews. And while that shopper cannot read through every review, he or she can see the general sentiment of previous customers by the numerical rating. There should (ideally) be a strong correlation between the language used and the rating given, so this was a great opportunity to familiarize myself with Python's Natural Language Toolkit, or *nltk*. 
+Before a user makes a purchase on Amazon, he or she takes some time to decide between similar products. And any savvy shopper would likely browse through each product's reviews. And while that shopper cannot read through every user review, he or she can see the *general sentiment* of previous customers by the number of stars assigned. There should be a strong correlation between the language used and the numerical rating given, so this was a great opportunity to familiarize myself with the basics of natural language processesing. 
 
-My question was **how well can we predict a user's product rating from their text review?** Moreover... what relevant features can be extracted from this data, and what models work best for prediction?
+Put simply, my question was **how well can we predict a user's product rating from their text review?** Moreover... what relevant features can be extracted from this data, and what models work best for prediction?
 
 ## The Data
 
-In my search for data, I happened across [Julian McAley](http://jmcauley.ucsd.edu/data/amazon/) his website. There I found he had collected massive amounts of Amazon user reviews, each review saved as a JSON. I chose to investiage Julian's collection of 1.8 million electronic product reviews.  
+In my search for data, I happened across [Julian McAley](http://jmcauley.ucsd.edu/data/amazon/) and his website. There I found he had collected massive amounts of Amazon user reviews, each review saved as a JSON. I chose to investiage Julian's collection of 1.8 million electronic product reviews. Each JSON contained the following fields...
 
 - **\_id**... &nbsp; An id number added by MongoDB
 - **reviewerID**... &nbsp; The reviewer ID number
@@ -25,7 +24,7 @@ In my search for data, I happened across [Julian McAley](http://jmcauley.ucsd.ed
 - **unixReviewTime**... &nbsp; Unix timestamp of the review
 - **reviewTime**... &nbsp; Raw time of the review
 
-An example of a single review's data.
+An example of a single review's data....
 
     {
         "_id" : ObjectId("5813fe29668cc684c99e695a"),
@@ -50,11 +49,11 @@ An example of a single review's data.
 
 ## Tools
 
-For this project, I imported Julian's dataset into a local MongoDB instance on my laptop. I ~~used R to create a Shiny application for an interactive~~ made a Jupyer notebook for exploratory analysis. I used Python and nltk to extract features from the text, and fit a Naive Bayes classifier from sci-kit learn.
+For this project, I imported Julian's dataset into a local **MongoDB** instance on my laptop. I ~~used R to create a Shiny application for an interactive~~ made a Jupyer notebook for exploratory analysis. I used **Python** and [nltk](http://www.nltk.org) to extract features from the text, and fit a Naive Bayes classifier from [scikit-learn](http://scikit-learn.org/stable/).
 
 ## Methodology
 
-Once the data was queried from MongoDB, the data was split into k cross folds for model validation. For each train and test set pairs the script will aggregate the most common words and phrases. Using that data, each observation is mapped onto that *feature space* with other predictors like character count. The work flow of the project is outlined below.
+Once the data was queried from MongoDB, the data was split into 4 folds for model validation. For each train'test set pair, I aggregated the most common words and phrases. Using that data, each observation is mapped onto that *feature space* with other predictors like character count. The work flow of the project is outlined below.
 
 ```
 1: Query MongoDB
@@ -75,3 +74,13 @@ END
     a: Confusion matrix
     b: Precision and Recall
 ```
+
+## Features
+
+- Bag-of-words
+- Character Count
+- Number of sentences
+- "Chunks"
+
+... Will elaborate here soon ;)
+
