@@ -3,7 +3,7 @@
 #
 
 from nltk.tokenize import word_tokenize, sent_tokenize
-from explore import filter_tokens
+from helpers import filter_tokens
 import re, string
 
 a = [ word_tokenize("Oh my oh my look at all these tokens!"),

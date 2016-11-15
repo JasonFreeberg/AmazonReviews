@@ -4,19 +4,23 @@
 
 from nltk import FreqDist
 from nltk.corpus import stopwords
+import string
 from nltk.tokenize import word_tokenize, sent_tokenize
+from sklearn import linear_model
+
 
 def filter_tokens(list_of_tokens, regexpr):
     """
     Takes in a list of tokens, returns list of tokens that match regex
     """
-    return [word for word in list_of_tokens if regexpr.match(word)]
+    return [word for word in list_of_tokens if not regexpr.search(word)]
+
 
 def get_word_set(list_of_dict, key, regexpr, remove_stopwords = True):
         all_words = []
 
         for dict in list_of_dict:
-            words = word_tokenize(dict[key])
+            words = [word for word in dict[key].split()]
             words = [word.lower() for word in words]
             if regexpr:
                 words = filter_tokens(words, regexpr)
@@ -33,11 +37,12 @@ def make_features(list_of_tokens, common_words):
         Takes a list of tokens and set of N common words
         Returns a dictionary with N key/value pairs. Indicating the presence of that common word in the list of tokens
         """
-        return_dict = {}
+        return_list = list()
+        return_list.append(len(list_of_tokens))
         for common_word in common_words:
-            return_dict[common_word] = (common_word in list_of_tokens)
+            return_list.append(common_word in list_of_tokens)
 
-        return return_dict
+        return return_list
 
 
 def match(list1, list2):
@@ -58,6 +63,7 @@ def match(list1, list2):
                     matches.append(0)
 
         return n_matches, matches
+
 
 def high_rating(review_rating):
     """

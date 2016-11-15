@@ -2,20 +2,19 @@
 # Jason Freeberg
 # Fall Quarter 2016
 
-# Feasibility test.
-# Makes predictions using only the set of N most common words in training set.
-# Classes are made binary: rating > 3 OR rating <= 3
-# Only a simple 2-fold train/test split.
-
 # Modules
 import string, re, sys, time
 import pymongo as mongo
 from helpers import *  # my user defined functions
 from nltk.tokenize import word_tokenize
-import nltk
+from sklearn import naive_bayes, metrics
+from sklearn.cross_validation import KFold
+from numpy import array
+
 
 # Main function
 if __name__ == '__main__':
+    seed = 1
     start = time.time()
 
     """
@@ -37,81 +36,92 @@ if __name__ == '__main__':
     # Training proportion for naive bayes classifier
     TRAIN_PROPORTION = 0.85
     N_COMMON_WORDS = 100
-
-    # Matches punctuation
+    FOLDS = 3
+    # Regular Expressions
     regex = re.compile('[^%s]+' % re.escape(string.punctuation))
+    digits = re.compile('[^%s]+' % re.escape(string.digits))
+
+    # https://regex101.com/r/FCVdpt/1
 
     # Point to the MongoDB collection
     client = mongo.MongoClient(host="localhost", port=27017)
     collection = client[DATABASE_NAME][COLLECTION_NAME]
 
     # Pull parts of every JSON. Drop _id field
+    print("Query")
     mongoPull = collection.find({}, {"overall": 1,
                                      "reviewerID": 1,
                                      "unixReviewTime": 1,
                                      "reviewText": 1,
-                                     "_id": 0}).limit(6000)
+                                     "_id": 0}).limit(10000)
 
-    reviews = list(mongoPull)
+    reviews = array(list(mongoPull))
 
     # Train / test split
-    # NEED TO SHUFFLE THE OBSERVATIONS -> use random module
-    numReviews = len(reviews)
-    trainsize = int(numReviews * TRAIN_PROPORTION)
-    train, test = reviews[:trainsize], reviews[trainsize:]
+    kfold = KFold(n=len(reviews), n_folds=FOLDS, shuffle=True, random_state=seed)
 
-    # MODELING
+    all_precision = []
+    all_recall = []
 
-    # Set of most common words from training set only.
-    word_set = get_word_set(train, "reviewText", regex)
-    common_words = set(Tuple[0] for Tuple in word_set.most_common(N_COMMON_WORDS))
+    for train_index, test_index in kfold:
+        train, test = reviews[train_index], reviews[test_index]
 
-    trainFeaturesLabels = []
-    testFeaturesLabels = []
+        # MODELING
+        # Set of most common words from training set only.
+        print("Common Words")
+        word_set = get_word_set(train, "reviewText", regex)
+        common_words = set(Tuple[0] for Tuple in word_set.most_common(N_COMMON_WORDS))
 
-    # Iterate over train and test sets, extract features
-    for json in train:
-        review = json["reviewText"]
-        words = word_tokenize(review)
-        words_lower = [word.lower() for word in words]
+        trainLabels = []
+        trainFeatures = []
+        testLabels = []
+        testFeatures = []
 
-        features = make_features(words_lower, common_words)
-        label = high_rating(json["overall"])
+        # Iterate over train and test sets, extract features
+        print("Extract Features")
+        for json in train:
+            review = json["reviewText"]
+            words = word_tokenize(review)
+            words_lower = [word.lower() for word in words]
 
-        # For now just use the dict
-        trainFeaturesLabels.append((features, label))
+            features = make_features(words_lower, common_words)
+            label = json["overall"]
 
-    for json in test:
-        review = json["reviewText"]
-        words = word_tokenize(review)
-        words_lower = [word.lower() for word in words]
+            trainLabels.append(label)
+            trainFeatures.append(features)
 
-        features = make_features(words_lower, common_words)
-        label = high_rating(json["overall"])
+        for json in test:
+            review = json["reviewText"]
+            words = word_tokenize(review)
+            words_lower = [word.lower() for word in words]
 
-        testFeaturesLabels.append((features, label))
+            features = make_features(words_lower, common_words)
+            label = json["overall"]
 
-    # Separate lists of test set's features and labels
-    testFeatures = [tuple[0] for tuple in testFeaturesLabels]
-    testLabels = [tuple[1] for tuple in testFeaturesLabels]
+            testLabels.append(label)
+            testFeatures.append(features)
 
-    # Train and test naive bayes classifier
-    classifier = nltk.NaiveBayesClassifier.train(trainFeaturesLabels)
-    predictions = [classifier.classify(features) for features in testFeatures]
-    Ncorrect, matches = match(predictions, testLabels)
+        # Train and test naive bayes classifier
+        print("Modeling")
+        classifier = naive_bayes.MultinomialNB()
+        classifier.fit(X=trainFeatures, y=trainLabels)
+        predictions = classifier.predict(testFeatures)
 
-    # OUTPUT
-    print("Cardinality of common word set =", len(common_words))
-    print("Train size =", len(train))
-    print("Test size =", len(test))
-    print("# tested =", len(matches))
-    print("# correct =", Ncorrect)
-    print("% correct =", round(Ncorrect / len(matches), 4))
+        print("Validation")
+        precision = metrics.precision_score(y_true=testLabels, y_pred=predictions, average="macro")
+        recall = metrics.recall_score(y_true=testLabels, y_pred=predictions, average="macro")
+        all_precision.append(precision)
+        all_recall.append(recall)
 
-    if len(reviews) != len(train) + len(test):
-        raise Warning("Train and test set sizes sum correctly.")
-    if len(test) != len(matches):
-        raise Warning
+        print("Precision =", precision)
+        print("Recall  =", recall)
+        print("\n ------------------------ \n")
+
+    mean_precision = sum(precision) / len(precision)
+    mean_recall = sum(recall) / len(recall)
+
+    print("Mean precision =", round(mean_precision, 3))
+    print("Mean recall =", round(mean_recall, 3))
 
     end = time.time()
     print("Entire process took", round(end - start, 2), "seconds.\n... Goodbye.")
