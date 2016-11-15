@@ -1,4 +1,6 @@
 # The Language of Amazon Reviews
+__Jason Freeberg__
+__November 2016__
 
 ## Project Motivation
 
@@ -48,26 +50,28 @@ An example of a single review's data.
 
 ## Tools
 
-For this project, I imported Julian's dataset into a local MongoDB on my laptop. I used Python and nltk to extract features from the text, and fit a Naive Bayes classifier. I also used R to create a Shiny application for an interactive exploratory analysis. Since the data contains extraneous variables that I was not interested in, running tests and model building was very time consuming. To get around this I wrote ~6000 observations into a list of tuples, ("review text", rating), and read from that file as I built the model. Once the classifier was optimized from those ~6000 observations, I ran through the process with as much data as my wimpy MacBook Air could handle overnight. 
+For this project, I imported Julian's dataset into a local MongoDB instance on my laptop. I ~~used R to create a Shiny application for an interactive~~ made a Jupyer notebook for exploratory analysis. I used Python and nltk to extract features from the text, and fit a Naive Bayes classifier from sci-kit learn.
 
 ## Methodology
 
 Once the data was queried from MongoDB, the data was split into k cross folds for model validation. For each train and test set pairs the script will aggregate the most common words and phrases. Using that data, each observation is mapped onto that *feature space* with other predictors like character count. The work flow of the project is outlined below.
 
-**1:** Query MongoDB
-**2:** Create k-Fold cross validation iterator
+```
+1: Query MongoDB
+2: Create k-Fold cross validation iterator
 FOR train and test sets in cross validation iterator:
-    **3:** Using training data:
+    3: Using training data:
         a: Aggregate features from text
         b: Create feature space
             - Top N words
-    **4:** Map train and test observations onto feature space
+    4: Map train and test observations onto feature space
             - Add character count
-    **5:** Classify test set observations
+    5: Classify test set observations
         a: Create table of predicted class probabilities and true labels
-    **6:** Save validation results
+    6: Save validation results
         a: Append to a table outside of loop
-    END
-**7:** Examine results
+END
+7: Examine results
     a: Confusion matrix
     b: Precision and Recall
+```
