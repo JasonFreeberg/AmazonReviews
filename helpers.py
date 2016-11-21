@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 import string
 from nltk.tokenize import word_tokenize, sent_tokenize
 from sklearn import linear_model
+from operator import ge
 
 
 def filter_tokens(list_of_tokens, regexpr):
@@ -69,7 +70,19 @@ def high_rating(review_rating):
     """
     Reduce overall ratings to binary: 1 if review is over 3 stars, else 0
     """
-    if review_rating >= 3:
+    if review_rating == 5:
         return 1
     else:
         return 0
+
+
+def sequential_threshold(thresholds, list_of_lists):
+    """
+    Takes a list of lists holding predicted class probabilities, and returns a list of class predictions using
+    the thresholds given.
+    """
+    return_list = list()
+    for List in list_of_lists:
+        logical = map(ge, List, thresholds)
+        next(elem for elem in logical if elem is True)
+        return_list.append()

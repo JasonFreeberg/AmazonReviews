@@ -1,198 +1,120 @@
+# PSTAT 131 Project
 # Jason Freeberg
-# November 2016
-# Git: /JasonFreeberg
+# Fall Quarter 2016
 
-# Updated pipeline.
-
-"""
-Step 1: Query MongoDB
-Step 2: Create k-Fold cross validation iterator
-
-FOR train and test sets in cross validation iterator DO:
-    Step 3: Using training data...
-        a: Aggregate features from text
-        b: Create feature space
-            - Top N words
-            - Month text was written
-            - Character count
-    Step 4: Map train and test observations onto feature space
-    Step 5: Classify test set observations
-        a: Create table of predicted and actual classes
-    Step 6: Save validation results
-        a: Append to a table outside of loop
-    END
-
-Step 7: Examine results
-"""
-
+# Modules
 import string, re, sys, time
 import pymongo as mongo
+from helpers import *  # my user defined functions
+from sklearn import naive_bayes, metrics
 from sklearn.cross_validation import KFold
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import GridSearchCV
 from numpy import array, append
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.probability import FreqDist
-import nltk
 
-def match(a_list):
-    correct = 0
-    total = len(a_list)
-    for item in a_list:
-        if item[1] == item[0]:
-            correct += 1
-
-    return correct, total
-
-
-def tokenize(string, lower=True):
-    """
-    Returns the string tokenized as words. If lower=True, the tokens are lowercased
-    """
-    tokens = word_tokenize(string)
-    if lower:
-        tokens = [token.lower() for token in tokens]
-    return tokens
-
-
-def filter_tokens(list_of_tokens, regexpr, remove_stopwords=True):
-    """
-    Takes in a list of tokens, returns list of tokens that match regex
-    """
-    return [token
-            for token in list_of_tokens
-            if regexpr.match(token) and
-            token not in stopwords.words("english")
-            if remove_stopwords]
-
-
-def clean(string, regexpr, lower = True, remove_stopwords=True):
-    tokens = word_tokenize(string)
-    filtered_tokens = [token
-                       for token in tokens
-                       if regexpr.match(token) and
-                       token not in stopwords.words("english")
-                       if remove_stopwords]
-    if lower:
-        return [token.lower() for token in filtered_tokens]
-    else:
-        return filtered_tokens
-
-def checkprint(i, m, string):
-    if i % m == 0:
-        print(string, i)
-    return i + 1
-
-
-def feature_space(n, list_of_lists):
-        token_set = []
-        i = 0
-        for list_of_tokens in list_of_lists:
-            i = checkprint(i, 20, "Extracting")
-            token_set += list_of_tokens
-        return set(Tuple[0] for Tuple in FreqDist(token_set).most_common(n))
-
-
-def feature_space2(n, list_of_strings, regexpr, remove_stopwords=True):
-    token_set = []
-    i = 0
-    for string in list_of_strings:
-        i = checkprint(i, 20, "Extracting")
-        token_set += clean(string, regexpr, remove_stopwords=remove_stopwords)
-    return set(Tuple[0] for Tuple in FreqDist(token_set).most_common(n))
-
-
-def transform(feature_space, list_of_lists, list_of_ratings):
-        assert len(list_of_lists) == len(list_of_ratings)
-        i = 0
-        transformed = []
-        for list_of_tokens, rating in zip(list_of_lists, list_of_ratings):
-            i = checkprint(i, 20, "Transforming")
-            return_dict = {}
-            return_dict["charcount"] = len(list_of_tokens)
-
-            for feature in feature_space:
-                return_dict[feature] = (feature in list_of_tokens)
-
-
-            transformed.append((return_dict, rating))
-
-        return transformed
-
-
-def to_tuple(list_of_dict):
-        return [(Tuple[0], Tuple[1]) for Tuple in list_of_dict]
-
-# Main Function
+# Main function
 if __name__ == '__main__':
+    seed = 1
     start = time.time()
 
-    # DB Setup
-    DB_NAME = "amazon"
+    """
+    # Read the file's parameters
+    with open(sys.argv[1], 'r') as f:
+        args = f.readlines()
+
+    args = [item.strip('\n') for item in args]
+
+    # Parse the database, collection, and location
+    DATABASE_NAME = args[0]
+    COLLECTION_NAME = args[1]
+    """
+
+    # Database and Collection names
+    DATABASE_NAME = "amazon"
     COLLECTION_NAME = "electronics"
 
-    FOLDS = 2
-    N_COMMON_WORDS = 75
-    SEED = 131
+    # Training proportion for naive bayes classifier
+    TRAIN_PROPORTION = 0.85
+    N_COMMON_WORDS = 100
+    FOLDS = 3
+    # Regular Expressions
+    regex = re.compile('[^%s]+' % re.escape(string.punctuation))
+    digits = re.compile('[^%s]+' % re.escape(string.digits))
 
-    # Regular expressions
-    punct = re.compile('[^%s]+' % re.escape(string.punctuation))
+    # https://regex101.com/r/FCVdpt/1
 
+    # Point to the MongoDB collection
     client = mongo.MongoClient(host="localhost", port=27017)
-    collection = client[DB_NAME][COLLECTION_NAME]
+    collection = client[DATABASE_NAME][COLLECTION_NAME]
 
     # Pull parts of every JSON. Drop _id field
-    print("Start query")
-    query = collection.find({}, {"overall": 1,
-                                 "reviewText": 1,
-                                 "_id": 0}).limit(600)
+    print("Query")
+    mongoPull = collection.find({}, {"overall": 1,
+                                     "reviewerID": 1,
+                                     "unixReviewTime": 1,
+                                     "reviewText": 1,
+                                     "_id": 0}).limit(10000)
 
-    reviews = array([])
-    ratings = array([])
-    i = 0
-    for json in query:
-        reviews = append(reviews, clean(json["reviewText"], punct))
-        ratings = append(ratings, json["overall"])
-        i = checkprint(i, 50, "Cleaned")
-    print("End query.")
+    reviews = array(list(mongoPull))
 
-    k_fold = KFold(n=len(reviews), n_folds=FOLDS, random_state=SEED)
+    # Train / test split
+    kfold = KFold(n=len(reviews), n_folds=FOLDS, shuffle=True, random_state=seed)
 
-    all_predictions = []
-    for train_index, test_index in k_fold:
-        print("Split.")
+    all_precision = array([])
+    all_recall = array([])
 
-        train_text, test_text = reviews[train_index], reviews[test_index]
-        train_labels, test_labels = ratings[train_index], ratings[test_index]
+    print("Train/Test Split")
+    for train_index, test_index in kfold:
+        train, test = reviews[train_index], reviews[test_index]
 
-        start_features = time.time()
+        vectorizer = TfidfVectorizer(stop_words="english")
 
-        # simple_features = feature_space(N_COMMON_WORDS, train, "reviewText", punct)
-        simple_features = feature_space2(N_COMMON_WORDS, train_text, punct)
-        trainFeatureLabels = transform(simple_features, train_text, train_labels)
-        testFeatureLabels = transform(simple_features, test_text, test_labels)
+        trainLabels = list()
+        trainText = list()
+        testLabels = list()
+        testText = list()
 
-        stop_features = time.time()
+        for json in train:
+            trainLabels.append(json["overall"])
+            trainText.append(json["reviewText"])
+        for json in test:
+            testLabels.append(json["overall"])
+            testText.append(json["reviewText"])
 
-        feature_time = round((stop_features - start_features)/60, 2)
-        print("Creating feature space and transforming took", feature_time, "minutes.")
+        traintfidf = vectorizer.fit_transform(trainText)
+        testtfidf = vectorizer.transform(testText)
 
-        start_modeling = time.time()
+        print("Train Dim =", traintfidf.shape)
+        print("Train label=", len(trainLabels))
+        print("Test Dim =", testtfidf.shape)
+        print("Test label=", len(testLabels))
 
-        classifier = nltk.NaiveBayesClassifier.train(trainFeatureLabels)
-        predictions = [(classifier.classify(Tuple[0]), Tuple[1]) for Tuple in testFeatureLabels]
+        # Train and test naive bayes classifier
+        print("Modeling")
+        # class_prior=[400, 300, 550, 1400, 4000]
+        classifier = naive_bayes.MultinomialNB(class_prior=[400, 300, 550, 1400, 4000])
+        classifier.fit(X=traintfidf, y=trainLabels)
+        print("class count=", classifier.class_count_)
+        predictions = classifier.predict(testtfidf)
+        probs = classifier.predict_proba(testtfidf)
+        print("Class probabilities:", probs[:10])
 
-        stop_modeling = time.time()
-        model_time = round((stop_modeling - start_modeling)/60, 2)
-        print("Training and testing model took", model_time)
+        print("Validation")
+        print(metrics.confusion_matrix(y_true=testLabels, y_pred=predictions))
+        precision = metrics.precision_score(y_true=testLabels, y_pred=predictions, average="macro")
+        recall = metrics.recall_score(y_true=testLabels, y_pred=predictions, average="macro")
+        all_precision = append(all_precision, precision)
+        all_recall = append(all_recall, recall)
 
-        all_predictions += predictions
+        print("Precision =", round(precision, 4))
+        print("Recall  =", round(recall, 4))
+        print("\n ------------------------ \n")
 
-    correct, total = match(all_predictions)
-    print("# of tested observations =", total)
-    print("# correct =", correct)
-    print("% correct =",  round(correct/total, 2))
+    mean_precision = all_precision.mean()
+    mean_recall = all_recall.mean()
 
+    print("Mean precision =", round(mean_precision, 3))
+    print("Mean recall =", round(mean_recall, 3))
 
-    stop = time.time()
-    total_time = round((stop - start) / 60, 2)
-    print("Took", total_time, "minutes to cross validate 6000 observations.")
+    end = time.time()
+    print("Entire process took", round(end - start, 2), "seconds.\n... Goodbye.")
