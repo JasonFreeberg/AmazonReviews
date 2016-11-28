@@ -1,0 +1,146 @@
+Last login: Sat Nov 26 16:29:42 on ttys001
+Jasons-MacBook-Air:~ jasonfreeberg$ cd ~/Desktop/AmazonReviews/
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ ls
+Explore.ipynb	Unit_Tests.py	__pycache__	helpers.py
+README.md	Version2.py	basicBayes.py	version3.py
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+	new file:   version3.py
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   .idea/dictionaries/jasonfreeberg.xml
+	modified:   .idea/workspace.xml
+	modified:   .ipynb_checkpoints/Explore-checkpoint.ipynb
+	modified:   Explore.ipynb
+	modified:   README.md
+	modified:   Unit_Tests.py
+	modified:   Version2.py
+	modified:   __pycache__/helpers.cpython-35.pyc
+	modified:   helpers.py
+	modified:   version3.py
+
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ git add version3.py
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ git commit -m "Grid search"
+[master 1eacd0e] Grid search
+ 1 file changed, 151 insertions(+)
+ create mode 100644 version3.py
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ git push
+Counting objects: 3, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 2.02 KiB | 0 bytes/s, done.
+Total 3 (delta 1), reused 0 (delta 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local objects.
+To https://github.com/JasonFreeberg/AmazonReviews.git
+   76f26b0..1eacd0e  master -> master
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ python Version3.py
+-- Querying --
+-- Splitting Data --
+-- Model Tuning --
+Tuning first model...
+Fitting 2 folds for each of 10 candidates, totalling 20 fits
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=1 ......
+load: 2.17  cmd: python3.5 23709 running 7.23u 0.33s
+load: 2.08  cmd: python3.5 23709 running 10.81u 0.35s
+load: 2.08  cmd: python3.5 23709 running 11.75u 0.36s
+load: 1.96  cmd: python3.5 23709 running 152.64u 1.64s
+load: 1.89  cmd: python3.5 23709 running 161.36u 1.74s
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=1, score=0.555033, total= 2.5min
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:  2.8min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=1 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=1, score=0.552966, total= 2.5min
+[Parallel(n_jobs=1)]: Done   2 out of   2 | elapsed:  5.8min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=1 ......
+load: 2.17  cmd: python3.5 23709 running 473.53u 5.19s
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=1, score=0.601364, total= 5.6min
+[Parallel(n_jobs=1)]: Done   3 out of   3 | elapsed: 12.1min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=1 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=1, score=0.597928, total= 5.4min
+[Parallel(n_jobs=1)]: Done   4 out of   4 | elapsed: 18.3min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=2 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=2, score=0.553151, total= 2.4min
+[Parallel(n_jobs=1)]: Done   5 out of   5 | elapsed: 21.1min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=2 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=2, score=0.553202, total= 2.3min
+[Parallel(n_jobs=1)]: Done   6 out of   6 | elapsed: 23.7min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=2 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=2, score=0.610301, total= 5.1min
+[Parallel(n_jobs=1)]: Done   7 out of   7 | elapsed: 29.5min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=2 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=2, score=0.609228, total= 4.9min
+[Parallel(n_jobs=1)]: Done   8 out of   8 | elapsed: 35.2min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=4 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=4, score=0.553622, total= 2.4min
+[Parallel(n_jobs=1)]: Done   9 out of   9 | elapsed: 37.9min remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=4 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=4, score=0.557439, total= 2.2min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=4 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=4, score=0.608184, total= 5.7min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=4 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=4, score=0.608522, total= 5.4min
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=8 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=8, score=0.546566, total= 2.2min
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=8 ......
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=8, score=0.555791, total= 2.2min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=8 ......
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=8, score=0.607244, total= 5.6min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=8 ......
+load: 2.15  cmd: python3.5 23709 running 3842.26u 41.19s
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=8, score=0.608051, total= 5.0min
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=10 .....
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=10, score=0.544450, total= 2.1min
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__C=10 .....
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__C=10, score=0.555556, total= 2.1min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=10 .....
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=10, score=0.607008, total= 5.3min
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__C=10 .....
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__C=10, score=0.608286, total= 5.2min
+[Parallel(n_jobs=1)]: Done  20 out of  20 | elapsed: 86.7min finished
+load: 2.01  cmd: python3.5 23709 running 5555.04u 54.40s
+load: 2.24  cmd: python3.5 23709 running 5711.74u 56.38s
+Tuning second model...
+Fitting 2 folds for each of 2 candidates, totalling 4 fits
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__alpha=2.47131951492 
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__alpha=2.47131951492, score=0.606303, total=   1.1s
+[Parallel(n_jobs=1)]: Done   1 out of   1 | elapsed:    1.6s remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 1), classifier__estimator__alpha=2.47131951492 
+[CV]  vectorizer__ngram_range=(1, 1), classifier__estimator__alpha=2.47131951492, score=0.606638, total=   1.1s
+[Parallel(n_jobs=1)]: Done   2 out of   2 | elapsed:    3.2s remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__alpha=2.47131951492 
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__alpha=2.47131951492, score=0.606303, total=   3.2s
+[Parallel(n_jobs=1)]: Done   3 out of   3 | elapsed:    7.6s remaining:    0.0s
+[CV] vectorizer__ngram_range=(1, 2), classifier__estimator__alpha=2.47131951492 
+[CV]  vectorizer__ngram_range=(1, 2), classifier__estimator__alpha=2.47131951492, score=0.606638, total=   3.0s
+[Parallel(n_jobs=1)]: Done   4 out of   4 | elapsed:   11.7s remaining:    0.0s
+[Parallel(n_jobs=1)]: Done   4 out of   4 | elapsed:   11.7s finished
+-- Model Validation --
+/Users/jasonfreeberg/anaconda/lib/python3.5/site-packages/sklearn/metrics/classification.py:1113: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples.
+  'precision', 'predicted', average, warn_for)
+8500 reviews in dev data.
+1500 reviews in test data.
+Model 1...
+Best params: 
+ {'vectorizer__ngram_range': (1, 2), 'classifier__estimator__C': 2}
+Precision is 0.421 and recall is 0.343.
+[[ 42   6   5  14  32]
+ [ 15   6  12  22  32]
+ [  7   2   9  41  58]
+ [  3   2  11  79 196]
+ [  6   3  11  96 790]]
+Model 2...
+Best params: 
+ {'vectorizer__ngram_range': (1, 1), 'classifier__estimator__alpha': 2.4713195149159324}
+Precision is 0.121 and recall is 0.200.
+[[  0   0   0   0  99]
+ [  0   0   0   0  87]
+ [  0   0   0   0 117]
+ [  0   0   0   0 291]
+ [  0   0   0   0 906]]
+Jasons-MacBook-Air:AmazonReviews jasonfreeberg$ 

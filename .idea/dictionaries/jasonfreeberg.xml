@@ -1,3 +1,9 @@
 <component name="ProjectDictionaryState">
-  <dictionary name="jasonfreeberg" />
+  <dictionary name="jasonfreeberg">
+    <words>
+      <w>mutliclassifier</w>
+      <w>ngram</w>
+      <w>vectorizer</w>
+    </words>
+  </dictionary>
 </component>

@@ -75,12 +75,3 @@ END
     b: Precision and Recall
 ```
 
-## Features
-
-- Bag-of-words
-- Character Count
-- Number of sentences
-- "Chunks"
-
-... Will elaborate here soon ;)
-

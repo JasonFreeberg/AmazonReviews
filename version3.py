@@ -70,6 +70,7 @@ if __name__ == '__main__':
 
     # Pipeline components
     vectorizer = TfidfVectorizer(stop_words="english")
+    clusterer = KMeans(max_iter=200)
     classifier1 = SVC(kernel="linear", random_state=seed, cache_size=500, class_weight="balanced", probability=True)
     classifier2 = MultinomialNB()
     mutliclassifier1 = OneVsRestClassifier(classifier1)
@@ -78,32 +79,41 @@ if __name__ == '__main__':
     # Assemble pipeline
     pipeline1 = Pipeline([
         ('vectorizer', vectorizer),
+        ('clusterer', clusterer),
         ('classifier', mutliclassifier1),
     ])
 
     pipeline2 = Pipeline([
         ("vectorizer", vectorizer),
+        ('clusterer', clusterer),
         ("classifier", mutliclassifier2),
     ])
 
     # Hyper-parameters to search over
-    ngram_range = [(1, 1), (1, 2)]
-    C = random.uniform(1, 5, 10)
+    #ngram_range = [(1, 1), (1, 2)]
+    ngram_range = [(1, 2)]
+
+    n_clusters = [2, 5, 8]
+
+    #C = [1, 2, 4, 8, 10]
+    C = [2]
     kernel = ["linear"]
 
     priors = [sorted([random.exponential(scale=10) for i in range(0, 5)], reverse=True) for i in range(0, 1)]
-    alpha = random.uniform(1.5, 3, 1)
+    #alpha = random.uniform(1.5, 3, 1)
+    alpha = [2.47131]
 
     parameters1 = {
         "vectorizer__ngram_range": ngram_range,
-        "classifier__estimator__C": C,
-        "classifier__estimator__kernel": kernel
+        "clusterer__n_clusters": n_clusters,
+        "classifier__estimator__C": C
     }
 
     parameters2 = {
         "vectorizer__ngram_range": ngram_range,
         "classifier__estimator__alpha": alpha,
-        #"classifier__estimator__class_prior": priors
+        # "classifier__estimator__class_prior": priors,
+        "clusterer__n_clusters": n_clusters
     }
 
     # Tune the pipeline

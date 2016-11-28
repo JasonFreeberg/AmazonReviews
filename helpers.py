@@ -76,13 +76,77 @@ def high_rating(review_rating):
         return 0
 
 
-def sequential_threshold(thresholds, list_of_lists):
+class SlidingThreshold:
+    def __init__(self, thresholds=None):
+        self.thresholds = thresholds
+        self.X = None
+
+    def transform(self):
+        return_list = list()
+
+        for List in self.X:
+            logical = list(map(ge, List, self.thresholds))
+            pred = logical.index(True) + 1.0
+            return_list.append(pred)
+
+        return return_list
+
+    def fit(self, X):
+        self.X = X
+
+
+def sliding_threshold(list_of_lists, thresholds):
     """
     Takes a list of lists holding predicted class probabilities, and returns a list of class predictions using
     the thresholds given.
     """
     return_list = list()
     for List in list_of_lists:
-        logical = map(ge, List, thresholds)
-        next(elem for elem in logical if elem is True)
-        return_list.append()
+        logical = list(map(ge, List, thresholds))
+        pred = logical.index(True) + 1.0
+        return_list.append(pred)
+    return return_list
+
+
+def sequential_neighbor(list_of_probs):
+    """
+    Assumes that the class probabilities are ordered by increasing frequency in the data
+    ... example_probs = [least_frequent_label_prob, moderately_frequent_label_prob, ..., most_frequent_label_prob]
+
+    predicted_label := least_frequent_label_prob
+    For element in list[1:]:
+        if predicted_label > element:
+            return predicted_label's *index*
+        else:
+            predicted_label := element
+            continue through list
+
+    """
+    list_of_probs = list(list_of_probs)
+    pred_prob = list_of_probs[0]
+    next_prob = list_of_probs[1]
+    i = 2
+    while pred_prob < next_prob:
+        i += 1
+        pred_prob = next_prob
+        try:
+            next_prob = list_of_probs[i]
+        except IndexError:
+            continue
+    return list_of_probs.index(pred_prob) + 1.0
+
+def sequential_comparison(list_of_lists):
+    """
+    Applies sequential_neighbor over a list of lists of probabilities.
+    """
+    return [sequential_neighbor(List) for List in list_of_lists]
+
+"""
+a = [.2, .1, .21, .13, .22]
+b = [.1, .2, .3, .4, .5]
+r = [a, b]
+
+print(sequential_neighbor(a))
+print(sequential_neighbor(b))
+print(sequential_comparison(r))
+"""
