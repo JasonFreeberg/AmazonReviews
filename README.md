@@ -49,29 +49,26 @@ An example of a single review's data....
 
 ## Tools
 
-For this project, I imported Julian's dataset into a local **MongoDB** instance on my laptop. I ~~used R to create a Shiny application for an interactive~~ made a Jupyer notebook for exploratory analysis. I used **Python** and [nltk](http://www.nltk.org) to extract features from the text, and fit a Naive Bayes classifier from [scikit-learn](http://scikit-learn.org/stable/).
+For this project, I imported Julian's dataset into a local **MongoDB** instance on my laptop. I made a Jupyter notebook for exploratory analysis. I decided to use **Python** and [Sci Kit's](http://scikit-learn.org/stable/) Term-Frequency Inverse Document Frequency (tfidf) class to extract features from the text. I then compared a Support Vector Machine and Naive Bayes Classifier. 
 
 ## Methodology
 
-Once the data was queried from MongoDB, the data was split into 4 folds for model validation. For each train'test set pair, I aggregated the most common words and phrases. Using that data, each observation is mapped onto that *feature space* with other predictors like character count. The work flow of the project is outlined below.
+Once the data was queried from Mongo, I split it into a train and test set. In the test set, I used Sci Kit's Pipeline and GridSearchCV classes to pipe together the tfidf transformer and classifiers. The GridSearchCV class allowed me to perform a grid search over the hyper parameters of both the transformers and classifiers. The process is time consuming.
 
 ```
 1: Query MongoDB
-2: Create k-Fold cross validation iterator
-FOR train and test sets in cross validation iterator:
-    3: Using training data:
-        a: Aggregate features from text
-        b: Create feature space
-            - Top N words
-    4: Map train and test observations onto feature space
-            - Add character count
-    5: Classify test set observations
-        a: Create table of predicted class probabilities and true labels
-    6: Save validation results
-        a: Append to a table outside of loop
-END
-7: Examine results
+2: Split into testing and training sets
+3: Create dev-train and dev-test sets from training set
+4: Create 2 classification pipelines
+    - tfidf transformer -> PCA -> classifier
+
+FOR each pipeline:
+    FOR each combination of hyperparemeters in GridSearchCV:
+        - Score classifier and average over two folds
+
+5: Examine results
     a: Confusion matrix
-    b: Precision and Recall
+    b: Precision and Recall or AUC
 ```
 
+## Results
